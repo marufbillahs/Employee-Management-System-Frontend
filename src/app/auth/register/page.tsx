@@ -45,7 +45,7 @@ const RegisterPage = () => {
         code: otp,
       });
       toast.success(res.data.message || 'Verification successful');
-      router.push('/');
+      router.push('/auth/login');
     } catch (err: any) {
       toast.error(err?.response?.data?.message || 'Verification failed');
     }
