@@ -25,7 +25,7 @@ const LoginPage = () => {
       // Redirect based on role
       switch (role) {
         case 'admin':
-          router.push('/admin');
+          router.push('/admin_dashboard');
           break;
         case 'employee':
           router.push('/employee');

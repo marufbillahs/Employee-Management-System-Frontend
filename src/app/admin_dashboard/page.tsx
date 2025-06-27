@@ -66,7 +66,7 @@ export default function AdminDashboard() {
   };
 
   const navItems = [
-    { name: 'Dashboard', icon: <Home />, href: '/admin' },
+    { name: 'Dashboard', icon: <Home />, href: '/admin_dashboard' },
     { name: 'Employee', icon: <Users />, href: '/employee' },
     { name: 'Leave', icon: <Calendar />, href: '/leave' },
     { name: 'Post Notice', icon: <Bell />, href: '#' },
