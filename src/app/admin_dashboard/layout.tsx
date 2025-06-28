@@ -43,7 +43,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { name: 'Leave', icon: <FileText />, href: '/admin_dashboard/leave' },
     { name: 'Attendance', icon: <Bell />, href: '/admin_dashboard/attendance' },
     { name: 'Notice', icon: <MessageSquare/>, href: '/admin_dashboard/notice' },
-    { name: 'Reports', icon: <FileText />, href: '#' },
+    { name: 'Reports', icon: <FileText />, href: '/admin_dashboard/reports' },
     { name: 'Settings', icon: <Settings />, href: '/admin_dashboard/settings' },
   ];
 
