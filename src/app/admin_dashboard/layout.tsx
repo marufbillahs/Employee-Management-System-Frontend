@@ -40,10 +40,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const navItems = [
     { name: 'Dashboard', icon: <Home />, href: '/admin_dashboard' },
     { name: 'Employee', icon: <Users />, href: '/admin_dashboard/employee' },
-    { name: 'Leave', icon: <Calendar />, href: '/admin_dashboard/leave' },
-    { name: 'Post Notice', icon: <Bell />, href: '#' },
+    { name: 'Leave', icon: <FileText />, href: '/admin_dashboard/leave' },
+    { name: 'Attendance', icon: <Bell />, href: '/admin_dashboard/attendance' },
+    { name: 'Post Notice', icon: <MessageSquare />, href: '#' },
     { name: 'Reports', icon: <FileText />, href: '#' },
-    { name: 'Settings', icon: <Settings />, href: '/admin_dashboard/settings' }, // route to page
+    { name: 'Settings', icon: <Settings />, href: '/admin_dashboard/settings' },
   ];
 
   return (

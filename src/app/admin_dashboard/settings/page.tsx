@@ -1,107 +1,161 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { jwtDecode } from 'jwt-decode';
-import toast from 'react-hot-toast';
+import { useState } from 'react';
+import toast, { Toaster } from 'react-hot-toast';
 
 export default function SettingsPage() {
-  const [adminId, setAdminId] = useState<number | null>(null);
-  const [resetCode, setResetCode] = useState('');
-  const [newPassword, setNewPassword] = useState('');
+  const [step, setStep] = useState<'email' | 'verify' | 'reset'>('email');
   const [email, setEmail] = useState('');
+  const [code, setCode] = useState('');
+  const [newPassword, setNewPassword] = useState('');
 
-  useEffect(() => {
-    const token = document.cookie.split('; ').find(c => c.startsWith('token='))?.split('=')[1];
-    if (token) {
-      try {
-        const decoded: any = jwtDecode(token);
-        setAdminId(decoded.sub);
-      } catch (err) {
-        toast.error('Failed to decode token');
-      }
+  const validateEmail = (email: string) =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+  const sendResetCode = async () => {
+    if (!validateEmail(email)) {
+      toast.error('Please enter a valid email');
+      return;
     }
-  }, []);
 
-  const handleRequestCode = async () => {
     try {
-      const res = await fetch(`http://localhost:4000/auth/admin/${adminId}/request-reset`, {
+      const res = await fetch('http://localhost:4000/auth/requestreset', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
       });
 
-      if (!res.ok) throw new Error();
-      toast.success('Verification code sent to your email');
-    } catch {
-      toast.error('Failed to send reset code');
+      if (!res.ok) throw new Error((await res.json()).message);
+
+      toast.success('OTP sent to your email');
+      setStep('verify');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to send code');
     }
   };
 
-  const handleResetPassword = async () => {
+  const verifyOTP = async () => {
+    if (code.trim().length !== 6) {
+      toast.error('OTP must be 6 digits');
+      return;
+    }
+
     try {
-      const verifyRes = await fetch(`http://localhost:4000/auth/admin/${adminId}/verify-reset-code`, {
+      const res = await fetch('http://localhost:4000/auth/verifyresetcode', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: resetCode }),
+        body: JSON.stringify({ email, code }),
       });
 
-      if (!verifyRes.ok) throw new Error('Invalid or expired code');
+      if (!res.ok) throw new Error((await res.json()).message);
 
-      const resetRes = await fetch(`http://localhost:4000/auth/admin/${adminId}/reset-password`, {
+      toast.success('OTP verified');
+      setStep('reset');
+    } catch (err: any) {
+      toast.error(err.message || 'Invalid or expired code');
+    }
+  };
+
+  const resetPassword = async () => {
+    if (newPassword.length < 6) {
+      toast.error('Password must be at least 6 characters');
+      return;
+    }
+
+    try {
+      const res = await fetch('http://localhost:4000/auth/resetpassword', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ newPassword }),
+        body: JSON.stringify({ email, newPassword }),
       });
 
-      if (!resetRes.ok) throw new Error('Failed to reset password');
+      if (!res.ok) throw new Error((await res.json()).message);
 
-      toast.success('Password reset successful!');
-    } catch (err) {
-      toast.error((err as any).message || 'Reset failed');
+      toast.success('Password changed successfully');
+      setStep('email');
+      setEmail('');
+      setCode('');
+      setNewPassword('');
+    } catch (err: any) {
+      toast.error(err.message || 'Reset failed');
     }
   };
 
   return (
-    <div className="max-w-lg mx-auto bg-white shadow p-6 rounded space-y-4">
-      <h1 className="text-xl font-semibold">Reset Password</h1>
+    <div className="flex justify-center items-center min-h-[calc(100vh-100px)]">
+      <Toaster />
+      <div className="bg-white shadow-xl rounded-xl w-full max-w-md px-8 py-10 space-y-6">
+        <h2 className="text-2xl font-bold text-center text-gray-800">🔐 Reset Password</h2>
+        <p className="text-sm text-gray-500 text-center">Update your password securely in 3 steps.</p>
 
-      <input
-        type="email"
-        placeholder="Your registered email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        className="w-full border px-3 py-2 rounded"
-      />
+        {step === 'email' && (
+          <>
+            <div>
+              <label className="block text-sm font-medium mb-1 text-gray-600">Email</label>
+              <input
+                type="email"
+                placeholder="Enter your email"
+                className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
+            <button
+              onClick={sendResetCode}
+              className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-2 rounded-md transition-all duration-200"
+            >
+              Send OTP
+            </button>
+          </>
+        )}
 
-      <button
-        onClick={handleRequestCode}
-        className="bg-blue-500 text-white px-4 py-2 rounded w-full"
-      >
-        Send Verification Code
-      </button>
+        {step === 'verify' && (
+          <>
+            <div>
+              <label className="block text-sm font-medium mb-1 text-gray-600">OTP</label>
+              <input
+                type="text"
+                placeholder="6-digit OTP"
+                className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+              />
+            </div>
+            <button
+              onClick={verifyOTP}
+              className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-2 rounded-md transition-all duration-200"
+            >
+              Verify Code
+            </button>
+            <p className="text-xs text-center text-gray-500 mt-1">
+              <button onClick={() => setStep('email')} className="underline text-green-600 hover:text-green-700">
+                Change Email
+              </button>
+            </p>
+          </>
+        )}
 
-      <input
-        type="text"
-        placeholder="Enter verification code"
-        value={resetCode}
-        onChange={(e) => setResetCode(e.target.value)}
-        className="w-full border px-3 py-2 rounded"
-      />
-
-      <input
-        type="password"
-        placeholder="New Password"
-        value={newPassword}
-        onChange={(e) => setNewPassword(e.target.value)}
-        className="w-full border px-3 py-2 rounded"
-      />
-
-      <button
-        onClick={handleResetPassword}
-        className="bg-green-500 text-white px-4 py-2 rounded w-full"
-      >
-        Confirm Reset
-      </button>
+        {step === 'reset' && (
+          <>
+            <div>
+              <label className="block text-sm font-medium mb-1 text-gray-600">New Password</label>
+              <input
+                type="password"
+                placeholder="At least 6 characters"
+                className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+              />
+            </div>
+            <button
+              onClick={resetPassword}
+              className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-2 rounded-md transition-all duration-200"
+            >
+              Confirm Reset
+            </button>
+          </>
+        )}
+      </div>
     </div>
   );
 }
