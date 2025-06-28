@@ -14,15 +14,11 @@ const LoginPage = () => {
       const res = await axios.post('http://localhost:4000/auth/login', data);
       const { access_token, role } = res.data;
 
-      // Set token in cookie (middleware uses this)
       document.cookie = `token=${access_token}; path=/; max-age=86400; SameSite=Lax`;
-
-      // Store role in localStorage (client-side access)
       localStorage.setItem('role', role);
 
       toast.success('Login successful');
 
-      // Redirect based on role
       switch (role) {
         case 'admin':
           router.push('/admin_dashboard');
@@ -38,7 +34,6 @@ const LoginPage = () => {
           break;
         default:
           router.push('/auth/login');
-          break;
       }
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Invalid credentials');
@@ -55,14 +50,14 @@ const LoginPage = () => {
           placeholder="Email"
           className="w-full border px-3 py-2 rounded"
           value={data.email}
-          onChange={e => setData({ ...data, email: e.target.value })}
+          onChange={(e) => setData({ ...data, email: e.target.value })}
         />
         <input
           type="password"
           placeholder="Password"
           className="w-full border px-3 py-2 rounded"
           value={data.password}
-          onChange={e => setData({ ...data, password: e.target.value })}
+          onChange={(e) => setData({ ...data, password: e.target.value })}
         />
         <button
           onClick={login}
@@ -70,6 +65,14 @@ const LoginPage = () => {
         >
           Login
         </button>
+
+        <p
+          className="text-center text-sm text-blue-600 hover:underline cursor-pointer"
+          onClick={() => router.push('/auth/forgot-password')}
+        >
+          Forgot password?
+        </p>
+
         <p
           className="text-center text-sm text-blue-600 hover:underline cursor-pointer"
           onClick={() => router.push('/auth/register')}
