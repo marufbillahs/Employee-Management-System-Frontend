@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import toast, { Toaster } from 'react-hot-toast';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface NoticeReport {
   id: number;
@@ -99,13 +100,46 @@ export default function ReportsPage() {
     fetchReports();
   };
 
+  // Animation variants for table rows
+  const rowVariants = {
+    hidden: { opacity: 0, y: 16 },
+    visible: { opacity: 1, y: 0 },
+    exit: { opacity: 0, scale: 0.97 },
+  };
+
   return (
-    <div className="p-6 space-y-6">
-      <Toaster />
-      <h1 className="text-3xl font-bold text-gray-800">Reports</h1>
+    <div className="relative min-h-[80vh] p-6 space-y-6 bg-gradient-to-br from-emerald-50 via-white to-green-50 flex flex-col items-center">
+      <Toaster position="top-center" />
+      {/* Decorative bubbles */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.7, x: -80, y: -40 }}
+        animate={{ opacity: 0.13, scale: 1, x: 0, y: 0 }}
+        transition={{ duration: 1.1, type: 'spring' }}
+        className="absolute top-[-100px] left-[-100px] w-[200px] h-[200px] rounded-full bg-gradient-to-tr from-blue-400 to-emerald-300 blur-2xl z-0"
+      />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.7, x: 80, y: 40 }}
+        animate={{ opacity: 0.13, scale: 1, x: 0, y: 0 }}
+        transition={{ duration: 1.1, type: 'spring', delay: 0.4 }}
+        className="absolute bottom-[-110px] right-[-90px] w-[160px] h-[160px] rounded-full bg-gradient-to-tr from-emerald-300 to-blue-400 blur-2xl z-0"
+      />
+
+      <motion.h1
+        className="text-3xl font-extrabold text-blue-700 mb-2 tracking-tight z-10"
+        initial={{ opacity: 0, y: -25 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+      >
+        Reports
+      </motion.h1>
 
       {/* Filters */}
-      <div className="bg-white p-6 rounded-xl shadow grid grid-cols-1 md:grid-cols-4 gap-4">
+      <motion.div
+        className="bg-white p-6 rounded-xl shadow grid grid-cols-1 md:grid-cols-4 gap-4 w-full max-w-4xl z-10"
+        initial={{ opacity: 0, scale: 0.97, y: 25 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.45, type: 'spring' }}
+      >
         <select
           name="type"
           value={filters.type}
@@ -143,87 +177,133 @@ export default function ReportsPage() {
           className="border p-2 rounded"
         />
 
-        <button
+        <motion.button
           onClick={applyFilters}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 md:col-span-4"
+          whileHover={{ scale: 1.04 }}
+          whileTap={{ scale: 0.97 }}
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 md:col-span-4 transition font-semibold"
         >
           Apply Filters
-        </button>
-      </div>
+        </motion.button>
+      </motion.div>
 
       {/* Export Buttons */}
-      <div className="flex gap-4">
-        <button
+      <motion.div
+        className="flex gap-4 z-10"
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15, duration: 0.4 }}
+      >
+        <motion.button
           onClick={() => handleExport('csv')}
-          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+          whileHover={{ scale: 1.04 }}
+          whileTap={{ scale: 0.97 }}
+          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 font-semibold transition"
         >
           Export CSV
-        </button>
-        <button
+        </motion.button>
+        <motion.button
           onClick={() => handleExport('pdf')}
-          className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+          whileHover={{ scale: 1.04 }}
+          whileTap={{ scale: 0.97 }}
+          className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 font-semibold transition"
         >
           Export PDF
-        </button>
-      </div>
+        </motion.button>
+      </motion.div>
 
       {/* Report Table */}
-      <div className="bg-white p-6 rounded-xl shadow">
+      <motion.div
+        className="bg-white p-6 rounded-xl shadow w-full max-w-4xl z-10"
+        initial={{ opacity: 0, scale: 0.97, y: 30 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.45, type: 'spring' }}
+      >
         {loading ? (
-          <p>Loading...</p>
+          <motion.p
+            className="text-gray-600 text-center py-10"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            Loading...
+          </motion.p>
         ) : (
-          <table className="w-full table-auto text-left">
-            <thead>
-              <tr className="border-b">
-                <th className="py-2">#</th>
-                <th className="py-2">Admin</th>
-                <th className="py-2">Type</th>
-                <th className="py-2">Message</th>
-                <th className="py-2">Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {reports.map((item, i) => (
-                <tr key={item.id} className="border-b">
-                  <td className="py-2">{i + 1}</td>
-                  <td className="py-2">{item.adminName}</td>
-                  <td className="py-2">{item.type}</td>
-                  <td className="py-2">{item.message}</td>
-                  <td className="py-2">{new Date(item.createdAt).toLocaleString()}</td>
+          <div className="overflow-x-auto">
+            <table className="w-full table-auto text-left">
+              <thead>
+                <tr className="border-b">
+                  <th className="py-2">#</th>
+                  <th className="py-2">Admin</th>
+                  <th className="py-2">Type</th>
+                  <th className="py-2">Message</th>
+                  <th className="py-2">Date</th>
                 </tr>
-              ))}
-              {reports.length === 0 && (
-                <tr>
-                  <td colSpan={5} className="text-center py-4 text-gray-500">
-                    No reports found.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                <AnimatePresence>
+                  {reports.map((item, i) => (
+                    <motion.tr
+                      key={item.id}
+                      variants={rowVariants}
+                      initial="hidden"
+                      animate="visible"
+                      exit="exit"
+                      transition={{ duration: 0.28, delay: i * 0.045 }}
+                      className="border-b"
+                    >
+                      <td className="py-2">{i + 1 + (pagination.page - 1) * pagination.limit}</td>
+                      <td className="py-2">{item.adminName}</td>
+                      <td className="py-2">{item.type}</td>
+                      <td className="py-2">{item.message}</td>
+                      <td className="py-2">{new Date(item.createdAt).toLocaleString()}</td>
+                    </motion.tr>
+                  ))}
+                  {reports.length === 0 && (
+                    <motion.tr
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                    >
+                      <td colSpan={5} className="text-center py-4 text-gray-500">
+                        No reports found.
+                      </td>
+                    </motion.tr>
+                  )}
+                </AnimatePresence>
+              </tbody>
+            </table>
+          </div>
         )}
-      </div>
+      </motion.div>
 
       {/* Pagination */}
-      <div className="flex justify-center gap-4">
-        <button
+      <motion.div
+        className="flex justify-center gap-4 z-10"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.25, duration: 0.3 }}
+      >
+        <motion.button
           disabled={pagination.page === 1}
           onClick={() => setPagination(p => ({ ...p, page: p.page - 1 }))}
-          className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+          className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50 font-semibold"
+          whileHover={{ scale: pagination.page === 1 ? 1 : 1.06 }}
+          whileTap={{ scale: pagination.page === 1 ? 1 : 0.96 }}
         >
           Prev
-        </button>
+        </motion.button>
         <span className="self-center">
           Page {pagination.page} of {pagination.totalPages}
         </span>
-        <button
+        <motion.button
           disabled={pagination.page >= pagination.totalPages}
           onClick={() => setPagination(p => ({ ...p, page: p.page + 1 }))}
-          className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+          className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50 font-semibold"
+          whileHover={{ scale: pagination.page >= pagination.totalPages ? 1 : 1.06 }}
+          whileTap={{ scale: pagination.page >= pagination.totalPages ? 1 : 0.96 }}
         >
           Next
-        </button>
-      </div>
+        </motion.button>
+      </motion.div>
     </div>
   );
 }

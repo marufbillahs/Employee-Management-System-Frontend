@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { isTokenValid } from '@/lib/auth';
 import toast, { Toaster } from 'react-hot-toast';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface Leave {
   id: number;
@@ -17,7 +18,15 @@ interface Leave {
 
 export default function LeavePage() {
   const [leaves, setLeaves] = useState<Leave[]>([]);
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
+
+  // Animation variants
+  const rowVariants = {
+    hidden: { opacity: 0, y: 14 },
+    visible: { opacity: 1, y: 0 },
+    exit: { opacity: 0, scale: 0.97 },
+  };
 
   useEffect(() => {
     const token = document.cookie.split('; ').find(c => c.startsWith('token='))?.split('=')[1];
@@ -27,6 +36,7 @@ export default function LeavePage() {
       return;
     }
 
+    setLoading(true);
     fetch('http://localhost:4000/leave/all', {
       headers: { Authorization: `Bearer ${token}` },
     })
@@ -38,7 +48,8 @@ export default function LeavePage() {
       .catch(() => {
         toast.error('Unauthorized');
         router.push('/auth/login');
-      });
+      })
+      .finally(() => setLoading(false));
   }, [router]);
 
   const updateStatus = async (id: number, status: 'Approved' | 'Rejected') => {
@@ -80,10 +91,37 @@ export default function LeavePage() {
   };
 
   return (
-    <>
-      <Toaster />
-      <h1 className="text-2xl font-semibold mb-4">Leave Management</h1>
-      <div className="bg-white rounded-xl shadow overflow-x-auto">
+    <div className="min-h-[70vh] flex flex-col items-center justify-start px-2 md:px-8 py-8 bg-gradient-to-br from-emerald-50 via-white to-green-50 relative">
+      <Toaster position="top-center" />
+      {/* Decorative animated background bubbles */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.7, x: -80, y: -40 }}
+        animate={{ opacity: 0.14, scale: 1, x: 0, y: 0 }}
+        transition={{ duration: 1.1, type: 'spring' }}
+        className="absolute top-[-100px] left-[-100px] w-[200px] h-[200px] rounded-full bg-gradient-to-tr from-green-400 to-emerald-300 blur-2xl z-0"
+      />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.7, x: 80, y: 40 }}
+        animate={{ opacity: 0.13, scale: 1, x: 0, y: 0 }}
+        transition={{ duration: 1.1, type: 'spring', delay: 0.4 }}
+        className="absolute bottom-[-110px] right-[-90px] w-[160px] h-[160px] rounded-full bg-gradient-to-tr from-emerald-300 to-green-400 blur-2xl z-0"
+      />
+
+      <motion.h1
+        className="text-3xl font-extrabold text-emerald-700 mb-8 tracking-tight z-10"
+        initial={{ opacity: 0, y: -25 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7 }}
+      >
+        Leave Management
+      </motion.h1>
+
+      <motion.div
+        className="bg-white rounded-xl shadow-2xl overflow-x-auto w-full max-w-5xl z-10"
+        initial={{ opacity: 0, scale: 0.97, y: 35 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.7, type: 'spring' }}
+      >
         <table className="min-w-full text-sm text-left">
           <thead className="bg-gray-50 text-gray-700">
             <tr>
@@ -97,58 +135,94 @@ export default function LeavePage() {
             </tr>
           </thead>
           <tbody>
-            {leaves.map(leave => (
-              <tr key={leave.id} className="border-t hover:bg-gray-50">
-                <td className="p-3">{leave.empId}</td>
-                <td className="p-3">{leave.name}</td>
-                <td className="p-3">{leave.leaveType}</td>
-                <td className="p-3">{leave.department}</td>
-                <td className="p-3">{leave.days}</td>
-                <td className="p-3">
-                  <span className={`px-2 py-1 rounded text-white text-xs ${leave.status === 'Pending'
-                    ? 'bg-yellow-500'
-                    : leave.status === 'Approved'
-                    ? 'bg-green-500'
-                    : 'bg-red-500'}`}>
-                    {leave.status}
-                  </span>
-                </td>
-                <td className="p-3 space-x-2">
-                  {leave.status === 'Pending' && (
-                    <>
-                      <button
-                        onClick={() => updateStatus(leave.id, 'Approved')}
-                        className="text-green-600 hover:underline"
-                      >
-                        Approve
-                      </button>
-                      <button
-                        onClick={() => updateStatus(leave.id, 'Rejected')}
-                        className="text-red-600 hover:underline"
-                      >
-                        Reject
-                      </button>
-                    </>
-                  )}
-                  <button
-                    onClick={() => deleteLeave(leave.id)}
-                    className="text-gray-500 hover:text-red-600"
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-            {leaves.length === 0 && (
-              <tr>
-                <td colSpan={7} className="text-center text-gray-500 py-6">
-                  No leave requests found.
-                </td>
-              </tr>
-            )}
+            <AnimatePresence>
+              {leaves.map((leave, idx) => (
+                <motion.tr
+                  key={leave.id}
+                  variants={rowVariants}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  transition={{ duration: 0.36, delay: idx * 0.045 }}
+                  className="border-t hover:bg-emerald-50/40"
+                >
+                  <td className="p-3">{leave.empId}</td>
+                  <td className="p-3">{leave.name}</td>
+                  <td className="p-3">{leave.leaveType}</td>
+                  <td className="p-3">{leave.department}</td>
+                  <td className="p-3">{leave.days}</td>
+                  <td className="p-3">
+                    <motion.span
+                      initial={{ scale: 0.9, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ type: 'spring', duration: 0.25, delay: idx * 0.04 }}
+                      className={`px-2 py-1 rounded text-white text-xs shadow-sm font-semibold ${
+                        leave.status === 'Pending'
+                          ? 'bg-yellow-500'
+                          : leave.status === 'Approved'
+                          ? 'bg-green-500'
+                          : 'bg-red-500'
+                      }`}
+                    >
+                      {leave.status}
+                    </motion.span>
+                  </td>
+                  <td className="p-3 space-x-2">
+                    {leave.status === 'Pending' && (
+                      <>
+                        <motion.button
+                          whileHover={{ scale: 1.09, color: '#059669' }}
+                          whileTap={{ scale: 0.96 }}
+                          onClick={() => updateStatus(leave.id, 'Approved')}
+                          className="text-green-600 font-medium hover:underline"
+                        >
+                          Approve
+                        </motion.button>
+                        <motion.button
+                          whileHover={{ scale: 1.09, color: '#dc2626' }}
+                          whileTap={{ scale: 0.96 }}
+                          onClick={() => updateStatus(leave.id, 'Rejected')}
+                          className="text-red-600 font-medium hover:underline"
+                        >
+                          Reject
+                        </motion.button>
+                      </>
+                    )}
+                    <motion.button
+                      whileHover={{ scale: 1.09, color: '#b91c1c' }}
+                      whileTap={{ scale: 0.96 }}
+                      onClick={() => deleteLeave(leave.id)}
+                      className="text-gray-500 hover:text-red-600 font-medium"
+                    >
+                      Delete
+                    </motion.button>
+                  </td>
+                </motion.tr>
+              ))}
+              {leaves.length === 0 && !loading && (
+                <motion.tr
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                >
+                  <td colSpan={7} className="text-center text-gray-500 py-6">
+                    No leave requests found.
+                  </td>
+                </motion.tr>
+              )}
+              {loading && (
+                <motion.tr
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                >
+                  <td colSpan={7} className="text-center text-gray-400 py-6">
+                    Loading...
+                  </td>
+                </motion.tr>
+              )}
+            </AnimatePresence>
           </tbody>
         </table>
-      </div>
-    </>
+      </motion.div>
+    </div>
   );
 }
